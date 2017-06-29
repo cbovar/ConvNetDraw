@@ -6,6 +6,12 @@ html, body {
     font-family:'opensans_semi', 'helvetica', 'helvetica', 'arial', 'sans-serif';
 }
 
+
+a:link { color:#d0d0d0; }
+a:visited { color:#c0c0c0; }
+a:hover { color:#ffffff; }
+a:active { color:#f0f0f0; }
+
 header {
    min-height: 100%;
    width: 100%;
