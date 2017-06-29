@@ -3,60 +3,107 @@ var convnetdraw = { REVISION: 'ALPHA' };
     "use strict";
 
     var drawing = function (id) {
-        this.ratio1 = 0.3;
-        this.offset = 300;
-
-        this.zoomx = 4;
-        this.zoomy = 4;
-        this.zoomz = 4;
-
         // Set up our canvas
         this.canvas = document.createElement('canvas');
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        this.canvas.width = document.getElementById(id).clientWidth;
+        this.canvas.height = document.getElementById(id).clientHeight;
 
         var content = document.getElementById(id);
         content.appendChild(this.canvas);
         this.ctx = this.canvas.getContext('2d');
+
+        this.ratio1 = document.querySelector('#ratio1');
+        this.ratio2 = document.querySelector('#ratio2');
+
+        this.zoomx = document.querySelector('#zoomx');
+        this.zoomz = document.querySelector('#zoomz');
+        this.zoomy = document.querySelector('#zoomy');
     }
 
     drawing.prototype = {
         drawItem: function (title, dim0, dim1, dim2, color) {
+            var actualX = dim2 * this.zoomx.value;
+            var actualZ = dim1 * this.zoomz.value;
+            var actualY = dim0 * this.zoomy.value;
+
             // draw the cube
             this.drawCube(
                 this.offset,
-                window.innerHeight / 2 + dim1 * this.zoomy / 2,
-                Number(dim2 * this.zoomx),
-                Number(dim1 * this.zoomz),
-                Number(dim0 * this.zoomy),
+                this.canvas.clientHeight / 2 + dim1 * this.zoomy.value / 2,
+                Number(actualX),
+                Number(actualZ),
+                Number(actualY),
                 color
             );
 
             var text = `${dim0}x${dim1}x${dim2}`;
             var textWidth = this.ctx.measureText(text).width;
             this.ctx.fillStyle = "black";
-            this.ctx.fillText(text, this.offset + dim0 * this.zoomy * this.ratio1 + (dim2 * this.zoomx - textWidth) / 2, window.innerHeight / 2 - dim1 * this.zoomz - 5);
+            this.ctx.fillText(text,
+                this.offset
+                + actualY * this.ratio1.value / 1000
+                + (actualX - textWidth) / 2,
+                this.canvas.clientHeight / 2 - dim0 * (0.5 + this.ratio2.value / 1000) * this.zoomy.value - 5);
 
-            this.offset += dim2 * this.zoomx + dim0 * this.zoomy * this.ratio1 + 5;
+            this.offset += actualX + actualY * this.ratio1.value / 1000 + 5;
         },
 
-        draw: function () {
-            this.offset = 300;
+        save: function () {
+            window.open(this.canvas.toDataURL("image/png"));
+        },
+
+        draw: function (text) {
+            this.offset = 200;
 
             // clear the canvas
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-            this.drawItem("input", 28, 28, 1, "#00c8fa");
-            this.drawItem("conv", 24, 24, 8, "#5bc3c4");
-            this.drawItem("relu", 24, 24, 8, "#ffc33f");
-            this.drawItem("pool", 12, 12, 8, "#f9e3b4");
-            this.drawItem("conv", 10, 10, 16, "#5bc3c4");
-            this.drawItem("relu", 10, 10, 16, "#ffc33f");
-            this.drawItem("pool", 4, 4, 16, "#f9e3b4");
-            this.drawItem("fullyconn", 1, 1, 10, "#fe4d66");
-            this.drawItem("softmax", 1, 1, 10, "#ffe4d66");
+            var lines = text.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].length > 0) {
+                    if (lines[i][0] != '#') {
+                        try {
+                            eval("this." + lines[i]);
+                        } catch (e) {
+                            var myRegexp = /(.*)\((.*),(.*),(.*)\)/g;
+                            var match = myRegexp.exec(lines[i]);
+                            if (match != null) {
+                                this.generic(match[1], match[2], match[3], match[4]);
+                            }
+                        }
+                    }
+                }
+            }
 
-            requestAnimationFrame(this.draw.bind(this));
+            requestAnimationFrame(this.draw.bind(this, text));
+        },
+
+        input: function (dim0, dim1, dim2) {
+            this.drawItem("input", dim0, dim1, dim2, "#00c8fa");
+        },
+
+        conv: function (dim0, dim1, dim2) {
+            this.drawItem("conv", dim0, dim1, dim2, "#5bc3c4");
+        },
+
+        relu: function (dim0, dim1, dim2) {
+            this.drawItem("conv", dim0, dim1, dim2, "#ffc33f");
+        },
+
+        pool: function (dim0, dim1, dim2) {
+            this.drawItem("pool", dim0, dim1, dim2, "#f9e3b4");
+        },
+
+        fullyconn: function (dim0, dim1, dim2) {
+            this.drawItem("pool", dim0, dim1, dim2, "#fe4d66");
+        },
+
+        softmax: function (dim0, dim1, dim2) {
+            this.drawItem("pool", dim0, dim1, dim2, "#ffe4d66");
+        },
+
+        generic: function (text, dim0, dim1, dim2) {
+            this.drawItem("conv", dim0, dim1, dim2, "#00c8fa");
         },
 
         // Colour adjustment function
@@ -86,8 +133,8 @@ var convnetdraw = { REVISION: 'ALPHA' };
 
             this.ctx.beginPath();
             this.ctx.moveTo(x + wx, y);
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - wy * 0.5);
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - h - wy * 0.5);
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - wy * this.ratio2.value / 1000);
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - h - wy * this.ratio2.value / 1000);
             this.ctx.lineTo(x + wx, y - h * 1);
             this.ctx.closePath();
             this.ctx.fillStyle = this.shadeColor(color, 10);
@@ -98,8 +145,8 @@ var convnetdraw = { REVISION: 'ALPHA' };
             this.ctx.beginPath();
             this.ctx.moveTo(x + wx, y - h);
             this.ctx.lineTo(x, y - h);
-            this.ctx.lineTo(x + wy * this.ratio1, y - h - (wy * 0.5));
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - h - wy * 0.5);
+            this.ctx.lineTo(x + wy * this.ratio1.value / 1000, y - h - (wy * this.ratio2.value / 1000));
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - h - wy * this.ratio2.value / 1000);
             this.ctx.closePath();
             this.ctx.fillStyle = this.shadeColor(color, 20);
             this.ctx.strokeStyle = this.shadeColor(color, 60);
@@ -107,7 +154,7 @@ var convnetdraw = { REVISION: 'ALPHA' };
             this.ctx.fill();
 
 
-             this.ctx.beginPath();
+            this.ctx.beginPath();
             this.ctx.moveTo(x + wx, y);
             this.ctx.lineTo(x, y);
             this.ctx.lineTo(x, y - h);
@@ -118,8 +165,8 @@ var convnetdraw = { REVISION: 'ALPHA' };
 
             this.ctx.beginPath();
             this.ctx.moveTo(x + wx, y);
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - wy * 0.5);
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - h - wy * 0.5);
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - wy * this.ratio2.value / 1000);
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - h - wy * this.ratio2.value / 1000);
             this.ctx.lineTo(x + wx, y - h * 1);
             this.ctx.closePath();
             this.ctx.strokeStyle = "black";
@@ -128,8 +175,8 @@ var convnetdraw = { REVISION: 'ALPHA' };
             this.ctx.beginPath();
             this.ctx.moveTo(x + wx, y - h);
             this.ctx.lineTo(x, y - h);
-            this.ctx.lineTo(x + wy * this.ratio1, y - h - (wy * 0.5));
-            this.ctx.lineTo(x + wx + wy * this.ratio1, y - h - wy * 0.5);
+            this.ctx.lineTo(x + wy * this.ratio1.value / 1000, y - h - (wy * this.ratio2.value / 1000));
+            this.ctx.lineTo(x + wx + wy * this.ratio1.value / 1000, y - h - wy * this.ratio2.value / 1000);
             this.ctx.closePath();
             this.ctx.strokeStyle = "black";
             this.ctx.stroke();

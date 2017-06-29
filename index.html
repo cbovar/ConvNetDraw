@@ -1,22 +1,71 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
   <link rel="stylesheet" href="styles.css">
   <script src="jquery-3.2.1.min.js"></script>
   <script src="convnetdraw.js"></script>
   <script type="text/javascript">
+    var Timer;
+    var drawing;
 
-$(window).on('load', function() {
-  var drawing = new convnetdraw.drawing("content");
-  drawing.draw();
-});
+    $(window).on('load', function () {
+      drawing = new convnetdraw.drawing("net");
+      drawing.draw(document.getElementById("script").value);
+    });
 
-</script
-  
+    function smallDelay() {
+      clearTimeout(Timer);
+      Timer = setTimeout(function () {
+        drawing.draw(document.getElementById("script").value);
+      }, 500);
+    };
+  </script>
 </head>
+
 <body>
-<div id="content">
-</div>
+  <header>
+    <div class="container">
+      <div class="flex-1">
+        <form>
+          <label for="ratio1">Ratio 1</label>
+          <input id="ratio1" type="range" value="300" min="0" max="1000">
+
+          <label for="ratio2">Ratio 2</label>
+          <input id="ratio2" type="range" value="500" min="0" max="1000">
+
+          <label for="zoomx">Zoom X</label>
+          <input id="zoomx" type="range" value="4" min="0" max="20">
+
+          <label for="zoomy">Zoom Y</label>
+          <input id="zoomy" type="range" value="4" min="0" max="20">
+
+          <label for="zoomz">Zoom Z</label>
+          <input id="zoomz" type="range" value="4" min="0" max="20">
+
+          <a href="javascript:drawing.save()">Save</a>
+        </form>
+
+      </div>
+      <div class="flex-2">
+        <div class="flex-2-child">
+          <textarea onkeyup="smallDelay()" id="script">
+# Some example
+input(28, 28, 1)
+conv(24, 24, 8)
+relu(24, 24, 8)
+pool(12, 12, 8)
+conv(10, 10, 16)
+relu(10, 10, 16)
+pool(4, 4, 16)
+fullyconn(1, 1, 10)
+softmax(1, 1, 10)
+          </textarea>
+        </div>
+        <div class="flex-3-child" id="net"></div>
+      </div>
+    </div>
+  </header>
 </body>
+
 </html>
