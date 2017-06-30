@@ -18,6 +18,8 @@ var convnetdraw = { REVISION: 'ALPHA' };
         this.zoomx = document.querySelector('#zoomx');
         this.zoomz = document.querySelector('#zoomz');
         this.zoomy = document.querySelector('#zoomy');
+
+        this.blackAndWhite = document.getElementById("blackandwhite");
     }
 
     drawing.prototype = {
@@ -109,6 +111,10 @@ var convnetdraw = { REVISION: 'ALPHA' };
         // Colour adjustment function
         // Nicked from http://stackoverflow.com/questions/5560248
         shadeColor: function (color, percent) {
+            if (this.blackAndWhite.checked) {
+                color = "#ffffff";
+            }
+
             color = color.substr(1);
             var num = parseInt(color, 16),
                 amt = Math.round(2.55 * percent),
