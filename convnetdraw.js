@@ -53,7 +53,7 @@ var convnetdraw = { REVISION: 'ALPHA' };
         },
 
         draw: function (text) {
-            this.offset = 200;
+            this.offset = 10;
 
             // clear the canvas
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
