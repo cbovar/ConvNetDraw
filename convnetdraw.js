@@ -51,7 +51,9 @@ var convnetdraw = { REVISION: 'ALPHA' };
         },
 
         save: function () {
-            window.open(this.canvas.toDataURL("image/png"));
+			var win=window.open();
+			var dataUrl = this.canvas.toDataURL("image/png");
+            win.document.write("<img src='"+dataUrl+"'/>");
         },
 
         draw: function (text) {
